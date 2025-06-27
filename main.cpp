@@ -42,21 +42,30 @@ int main(int argc, char *argv[]) {
   unsigned int gray_channels = (channels == 4) ? 2 : 1;
   size_t gray_img_size = width * height * gray_channels;
   unsigned char *gray_img = (unsigned char *)malloc(gray_img_size);
+  unsigned char *inv_img = (unsigned char *)malloc(img_size);
   if (gray_img == NULL) {
     std::cout << "error alloating space for gray image\n";
     return EXIT_FAILURE;
   }
 
-  for (unsigned char *p = img, *pg = gray_img; p != img + img_size;
-       p += channels, pg += gray_channels) {
+  for (unsigned char *p = img, *pg = gray_img, *ip = inv_img;
+       p != img + img_size;
+       p += channels, pg += gray_channels, ip += channels) {
     *(pg) = (unsigned int)((*p + *(p + 1) + *(p + 2)) / 3.0);
+    *(ip) = (255 - *(p));
+    *(ip + 1) = (255 - *(p + 1));
+    *(ip + 2) = (255 - *(p + 2));
     if (channels == 4) {
       *(pg + 1) = *(p + 3);
+      *(ip + 3) = *(p + 3);
     }
   }
 
   stbi_write_png("gray.png", width, height, gray_channels, gray_img,
                  width * gray_channels);
+
+  stbi_write_png("invImg.png", width, height, channels, inv_img,
+                 width * channels);
 
   unsigned int pixel_channel = (gray_channels == 2) ? 2 : 1;
   size_t pixel_img_size = width * height * pixel_channel;
@@ -136,6 +145,7 @@ int main(int argc, char *argv[]) {
 
   stbi_image_free(img);
   stbi_image_free(gray_img);
+  stbi_image_free(inv_img);
   stbi_image_free(pixel_img);
   std::cout << __cplusplus << std::endl;
   return EXIT_SUCCESS;
